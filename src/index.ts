@@ -1,5 +1,7 @@
 import { Hono } from 'hono'
-import { db } from './db/bun-sqlite'
+import { db } from './db/drizzle'
+import { blogPost } from './db/schema'
+import { eq } from 'drizzle-orm'
 
 const app = new Hono()
 
@@ -8,7 +10,7 @@ app.get('/', (c) => {
 })
 
 app.get("/cached", async (ctx) => {
-	const result = db.query("select 'This result is cached' as message;").get();
+	const result = await db.select().from(blogPost);
 
 	const lastModified = new Date();
 
@@ -35,6 +37,18 @@ app.get("/cached", async (ctx) => {
 		"ETag": etag,
 		"Last-Modified": lastModified.toUTCString()
 	})
+})
+
+app.post("/cached/:id", async (ctx) => {
+	const id = ctx.req.param("id");
+	const body = await ctx.req.json();
+	const update = await db.update(blogPost).set({
+		content: body.content ?? "Super Content"
+	}).where(eq(blogPost.id, parseInt(id))).returning();
+
+	return ctx.json({
+		update
+	}, 200)
 })
 
 export default app

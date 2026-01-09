@@ -5,11 +5,18 @@ meta {
 }
 
 post {
-  url: http://localhost:3000/cached
-  body: none
+  url: http://localhost:3000/cached/2
+  body: json
   auth: inherit
+}
+
+body:json {
+  {
+    "content": "Super content"
+  }
 }
 
 settings {
   encodeUrl: true
+  timeout: 0
 }
